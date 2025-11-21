@@ -1,0 +1,185 @@
+.app {
+  min-height: 100vh;
+  background: #0f172a;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 8px 8px;
+}
+
+.app-main {
+  width: 100%;
+}
+
+.app-header {
+  text-align: left;
+  margin-bottom: 12px;
+  padding-top: 2px;
+}
+
+.app-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.app-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: stretch;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 16px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #cbd5e1;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.nav-btn:active {
+  transform: scale(0.98);
+}
+
+.nav-btn.active {
+  background: #334155;
+  color: #f1f5f9;
+  border-color: #667eea;
+  box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+}
+
+.view-header {
+  background: #1e293b;
+  padding: 14px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid #334155;
+  margin-bottom: 16px;
+}
+
+.view-header h2 {
+  color: #f1f5f9;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.month-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.month-selector label {
+  font-weight: 500;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.month-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: #0f172a;
+  color: #f1f5f9;
+  -webkit-appearance: none;
+  touch-action: manipulation;
+}
+
+.month-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .app {
+    padding: 16px 16px;
+  }
+
+  .app-header {
+    margin-bottom: 20px;
+    padding-top: 8px;
+  }
+
+  .app-header h1 {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+  }
+
+  .app-nav {
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .nav-btn {
+    flex: 0 1 auto;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .view-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .month-selector {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    gap: 8px;
+  }
+
+  .month-input {
+    width: auto;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .app {
+    padding: 20px 20px;
+  }
+
+  .app-header h1 {
+    font-size: 1.8rem;
+  }
+}
