@@ -15,7 +15,7 @@ function ExpenseForm() {
     date: new Date().toISOString().slice(0, 10)
   })
 
-  const expenseCategories = ['Food', 'Utilities', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other']
+  const expenseCategories = ['Food', 'Utilities', 'Transport', 'Fuel', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other']
   const incomeCategories = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other']
   
   const categories = formData.type === 'income' ? incomeCategories : expenseCategories

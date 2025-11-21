@@ -11,6 +11,7 @@ function ExpenseList({ expenses, onDeleteExpense }) {
       Food: '🍔',
       Utilities: '💡',
       Transport: '🚗',
+      Fuel: '⛽',
       Shopping: '🛍️',
       Bills: '📄',
       Entertainment: '🎬',

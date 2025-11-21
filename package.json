@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.10.1",
+    "firebase": "^12.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-redux": "^9.2.0"
+    "react-is": "^19.2.0",
+    "react-redux": "^9.2.0",
+    "recharts": "^3.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

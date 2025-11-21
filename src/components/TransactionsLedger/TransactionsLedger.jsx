@@ -13,7 +13,7 @@ function TransactionsLedger() {
   const [editForm, setEditForm] = useState({})
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, transactionId: null, transaction: null })
 
-  const expenseCategories = ['Food', 'Utilities', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other']
+  const expenseCategories = ['Food', 'Utilities', 'Transport', 'Fuel', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other']
   const incomeCategories = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other']
 
   const filteredTransactions = transactions.filter(t => t.date.startsWith(selectedMonth))
@@ -95,6 +95,7 @@ function TransactionsLedger() {
       Food: '🍔',
       Utilities: '💡',
       Transport: '🚗',
+      Fuel: '⛽',
       Shopping: '🛍️',
       Bills: '📄',
       Entertainment: '🎬',
