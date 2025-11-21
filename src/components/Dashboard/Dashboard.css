@@ -466,7 +466,8 @@
   color: #475569;
 }
 
-/* Collapsible charts on all screen sizes */
+/* Tablet and up */
+@media (min-width: 768px) {
   .dashboard {
     padding: 20px 16px;
     margin-bottom: 16px;
