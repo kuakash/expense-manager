@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addTransaction } from '../../store/slices/transactionsSlice'
 import './ExpenseForm.css'
@@ -7,16 +7,41 @@ function ExpenseForm() {
   const dispatch = useDispatch()
   const selectedMonth = useSelector((state) => state.transactions.selectedMonth)
   
+  const getCurrentDate = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+  
   const [formData, setFormData] = useState({
     type: 'expense',
     amount: '',
     description: '',
     category: 'Food',
-    date: new Date().toISOString().slice(0, 10)
+    date: getCurrentDate()
   })
 
-  const expenseCategories = ['Food', 'Utilities', 'Transport', 'Fuel', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other']
-  const incomeCategories = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other']
+  // Compute the date value - always use today if form is empty
+  const isFormEmpty = !formData.amount && !formData.description
+  const today = getCurrentDate()
+  // If form is empty, always show today's date; otherwise use the selected date
+  const displayDate = isFormEmpty ? today : (formData.date || today)
+
+  // Update date in state to today whenever form becomes empty
+  useEffect(() => {
+    if (isFormEmpty) {
+      const currentToday = getCurrentDate()
+      setFormData(prev => ({
+        ...prev,
+        date: currentToday
+      }))
+    }
+  }, [isFormEmpty])
+
+  const expenseCategories = ['Bills', 'Entertainment', 'Food', 'Fuel', 'Gift', 'Healthcare', 'Loan', 'Other', 'Shopping', 'Transport', 'Utilities']
+  const incomeCategories = ['Gift', 'Investment', 'Other', 'Salary']
   
   const categories = formData.type === 'income' ? incomeCategories : expenseCategories
 
@@ -27,8 +52,8 @@ function ExpenseForm() {
       return
     }
 
-    // Use selected month's date if no date is selected
-    const transactionDate = formData.date || `${selectedMonth}-01`
+    // Use the display date (which is always current if form was empty)
+    const transactionDate = displayDate || getCurrentDate()
     
     dispatch(addTransaction({
       ...formData,
@@ -42,7 +67,7 @@ function ExpenseForm() {
       amount: '',
       description: '',
       category: 'Food',
-      date: new Date().toISOString().slice(0, 10)
+      date: getCurrentDate()
     })
   }
 
@@ -127,9 +152,9 @@ function ExpenseForm() {
             type="date"
             id="date"
             name="date"
-            value={formData.date}
+            value={displayDate}
             onChange={handleChange}
-            max={new Date().toISOString().slice(0, 10)}
+            max={getCurrentDate()}
           />
         </div>
       </div>

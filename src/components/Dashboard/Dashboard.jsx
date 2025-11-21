@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setSelectedMonth } from '../../store/slices/transactionsSlice'
+import Analytics from '../Analytics/Analytics'
 import './Dashboard.css'
 
 // Detect if device is mobile
@@ -46,7 +47,23 @@ function Dashboard() {
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
 
-    const balance = income - expenses
+    // Calculate balance for current month
+    const currentMonthBalance = income - expenses
+
+    // Calculate cumulative balance from all previous months (carry forward)
+    const previousMonthsBalance = transactions
+      .filter(t => {
+        // Get all transactions before the selected month
+        const transactionDate = t.date.substring(0, 7) // Get YYYY-MM format
+        return transactionDate < selectedMonth
+      })
+      .reduce((sum, t) => {
+        const amount = parseFloat(t.amount || 0)
+        return sum + (t.type === 'income' ? amount : -amount)
+      }, 0)
+
+    // Total balance = previous months balance + current month balance
+    const balance = previousMonthsBalance + currentMonthBalance
 
     // Category breakdown for expenses
     const breakdown = {}
@@ -151,7 +168,7 @@ function Dashboard() {
         <div className={`stat-card balance-card ${monthlyStats.balance >= 0 ? 'positive' : 'negative'}`}>
           <div className="stat-icon">{monthlyStats.balance >= 0 ? '✅' : '⚠️'}</div>
           <div className="stat-content">
-            <h3>Balance</h3>
+            <h3>Balance (Cumulative)</h3>
             <p className="stat-amount balance">{formatCurrency(monthlyStats.balance)}</p>
           </div>
         </div>
@@ -165,6 +182,15 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Analytics Section */}
+      <Analytics
+        chartData={chartData}
+        dailyExpenses={dailyExpenses}
+        monthlyStats={monthlyStats}
+        colors={COLORS}
+        transactions={transactions}
+        selectedMonth={selectedMonth}
+      />
     </div>
   )
 }

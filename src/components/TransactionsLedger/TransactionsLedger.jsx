@@ -13,8 +13,8 @@ function TransactionsLedger() {
   const [editForm, setEditForm] = useState({})
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, transactionId: null, transaction: null })
 
-  const expenseCategories = ['Food', 'Utilities', 'Transport', 'Fuel', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other']
-  const incomeCategories = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other']
+  const expenseCategories = ['Bills', 'Entertainment', 'Food', 'Fuel', 'Gift', 'Healthcare', 'Loan', 'Other', 'Shopping', 'Transport', 'Utilities']
+  const incomeCategories = ['Gift', 'Investment', 'Other', 'Salary']
 
   const filteredTransactions = transactions.filter(t => t.date.startsWith(selectedMonth))
     .sort((a, b) => new Date(b.date) - new Date(a.date))

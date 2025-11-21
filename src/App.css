@@ -1,9 +1,9 @@
 .app {
   min-height: 100vh;
-  background: #0f172a;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   max-width: 1400px;
   margin: 0 auto;
-  padding: 8px 8px;
+  padding: 12px 12px;
 }
 
 .app-main {
@@ -12,214 +12,268 @@
 
 .app-header {
   text-align: left;
-  margin-bottom: 12px;
-  padding-top: 2px;
+  margin-bottom: 20px;
+  padding: 20px 0 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  position: relative;
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #334155, transparent);
 }
 
 .app-header-content {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .app-header h1 {
-  font-size: 1.4rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: #f1f5f9;
-  margin-bottom: 4px;
-  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 .subtitle {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: #94a3b8;
   font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .app-nav {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: stretch;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
+  background: rgba(30, 41, 59, 0.4);
+  padding: 6px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
 }
 
 .nav-btn {
   flex: 1;
-  min-width: 100px;
-  padding: 10px 16px;
-  background: #1e293b;
-  border: 1px solid #334155;
+  min-width: 120px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
   border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #cbd5e1;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #94a3b8;
+  position: relative;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(139, 92, 246, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nav-btn:hover::before {
+  opacity: 1;
+}
+
 .nav-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .nav-btn.active {
-  background: #334155;
-  color: #f1f5f9;
-  border-color: #667eea;
-  box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn.active::before {
+  opacity: 0;
 }
 
 .view-header {
-  background: #1e293b;
-  padding: 14px 12px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  padding: 20px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(51, 65, 85, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  border: 1px solid #334155;
-  margin-bottom: 16px;
+  gap: 16px;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
 }
 
 .view-header h2 {
   color: #f1f5f9;
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .month-selector {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
 }
 
 .month-selector label {
-  font-weight: 500;
+  font-weight: 600;
   color: #cbd5e1;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
 }
 
 .month-input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 12px 16px;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 10px;
+  font-size: 0.875rem;
   font-family: inherit;
-  transition: all 0.2s ease;
-  background: #0f172a;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(15, 23, 42, 0.6);
   color: #f1f5f9;
   -webkit-appearance: none;
   touch-action: manipulation;
+  backdrop-filter: blur(10px);
+}
+
+.month-input:hover {
+  border-color: rgba(102, 126, 234, 0.5);
 }
 
 .month-input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.2);
+  background: rgba(15, 23, 42, 0.8);
 }
 
 .sync-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(102, 126, 234, 0.1);
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(139, 92, 246, 0.15));
   border: 1px solid rgba(102, 126, 234, 0.3);
-  border-radius: 6px;
-  font-size: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
 }
 
 .sync-text {
   color: #a5b4fc;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .sync-error {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(239, 68, 68, 0.1);
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 6px;
-  font-size: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .sync-error-text {
   color: #fca5a5;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 /* Tablet and up */
 @media (min-width: 768px) {
   .app {
-    padding: 16px 16px;
+    padding: 20px 20px;
   }
 
   .app-header {
-    margin-bottom: 20px;
-    padding-top: 8px;
+    margin-bottom: 24px;
+    padding: 24px 0 20px 0;
   }
 
   .app-header h1 {
-    font-size: 1.6rem;
-    margin-bottom: 6px;
+    font-size: 2rem;
   }
 
   .subtitle {
-    font-size: 0.85rem;
+    font-size: 0.9375rem;
   }
 
   .app-nav {
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 8px;
   }
 
   .nav-btn {
     flex: 0 1 auto;
-    padding: 10px 20px;
-    font-size: 0.9rem;
+    padding: 12px 24px;
+    font-size: 0.9375rem;
+    min-width: 140px;
   }
 
   .view-header {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    margin-bottom: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
   }
 
   .month-selector {
     flex-direction: row;
     align-items: center;
     width: auto;
-    gap: 8px;
+    gap: 12px;
   }
 
   .month-input {
     width: auto;
-    padding: 8px 12px;
-    font-size: 0.85rem;
+    padding: 10px 16px;
+    font-size: 0.875rem;
   }
 }
 
 /* Desktop */
 @media (min-width: 1024px) {
   .app {
-    padding: 20px 20px;
+    padding: 24px 24px;
   }
 
   .app-header h1 {
-    font-size: 1.8rem;
+    font-size: 2.25rem;
   }
 }
