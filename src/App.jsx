@@ -190,6 +190,12 @@ function App() {
   return (
     <div className="app">
       <main className="app-main">
+        <button
+          onClick={handleLogout}
+          className="signout-btn"
+        >
+          Sign Out
+        </button>
         <header className="app-header">
           <div className="app-header-content">
             <h1>💰 Expense Tracker</h1>
@@ -210,27 +216,6 @@ function App() {
                 currentUsername={username}
                 onUsernameChanged={handleUsernameChanged}
               />
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: '4px 12px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '6px',
-                  color: '#fca5a5',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.background = 'rgba(239, 68, 68, 0.2)'
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.background = 'rgba(239, 68, 68, 0.1)'
-                }}
-              >
-                Sign Out
-              </button>
             </div>
           </div>
           {isSyncing && (
