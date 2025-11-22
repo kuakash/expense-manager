@@ -222,93 +222,91 @@ const Analytics = ({ chartData = [], dailyExpenses = [], monthlyStats = {}, colo
       {/* Category Breakdown with Pie Chart */}
       {chartData.length > 0 && (
         <div className="analytics-section">
-          <div className="analytics-section-card">
-            <h4>Top Spending Category</h4>
-            <div className="category-chart-container">
-              {/* Pie Chart */}
-              <div className="pie-chart-container">
-                <Pie 
-                  data={{
-                    labels: chartData.map(c => c.name),
-                    datasets: [{
-                      data: chartData.map(c => c.value),
-                      backgroundColor: chartData.map((c, i) => colors[i % colors.length]),
-                      borderWidth: 0,
-                      hoverBorderWidth: 2,
-                      hoverBorderColor: '#f1f5f9'
-                    }]
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                      legend: {
-                        display: false
+          <h4>Top Spending Category</h4>
+          <div className="category-chart-container">
+            {/* Pie Chart */}
+            <div className="pie-chart-container">
+              <Pie 
+                data={{
+                  labels: chartData.map(c => c.name),
+                  datasets: [{
+                    data: chartData.map(c => c.value),
+                    backgroundColor: chartData.map((c, i) => colors[i % colors.length]),
+                    borderWidth: 0,
+                    hoverBorderWidth: 2,
+                    hoverBorderColor: '#f1f5f9'
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  plugins: {
+                    legend: {
+                      display: false
+                    },
+                    tooltip: {
+                      backgroundColor: '#1e293b',
+                      titleColor: '#cbd5e1',
+                      bodyColor: '#f1f5f9',
+                      borderColor: '#334155',
+                      borderWidth: 1,
+                      padding: 12,
+                      cornerRadius: 8,
+                      displayColors: true,
+                      titleFont: {
+                        size: 12,
+                        weight: 600
                       },
-                      tooltip: {
-                        backgroundColor: '#1e293b',
-                        titleColor: '#cbd5e1',
-                        bodyColor: '#f1f5f9',
-                        borderColor: '#334155',
-                        borderWidth: 1,
-                        padding: 12,
-                        cornerRadius: 8,
-                        displayColors: true,
-                        titleFont: {
-                          size: 12,
-                          weight: 600
-                        },
-                        bodyFont: {
-                          size: 14,
-                          weight: 700
-                        },
-                        callbacks: {
-                          label: (context) => {
-                            const label = context.label || ''
-                            const value = context.parsed || 0
-                            const percent = Math.round((value / total) * 100)
-                            return `${label}: ${formatCurrency(value)} (${percent}%)`
-                          }
+                      bodyFont: {
+                        size: 14,
+                        weight: 700
+                      },
+                      callbacks: {
+                        label: (context) => {
+                          const label = context.label || ''
+                          const value = context.parsed || 0
+                          const percent = Math.round((value / total) * 100)
+                          return `${label}: ${formatCurrency(value)} (${percent}%)`
                         }
                       }
-                    },
-                    interaction: {
-                      intersect: false
                     }
-                  }}
-                />
-              </div>
+                  },
+                  interaction: {
+                    intersect: false
+                  }
+                }}
+              />
+            </div>
 
-              {/* Category List - Shows all items, scrollable if more than 5 */}
-              <div className="category-breakdown-list-wrapper">
-                <div className="category-breakdown-list">
-                  {chartData.map((c, i) => {
-                    const percent = Math.round((c.value / total) * 100)
-                    return (
-                      <div key={c.name} className="category-breakdown-item">
-                        <div className="category-breakdown-header">
-                          <div className="category-breakdown-name">
-                            <span className="category-color-swatch" style={{ background: colors[i % colors.length] }}></span>
-                            <span>{c.name}</span>
-                          </div>
-                          <div className="category-breakdown-amount">
-                            <span className="amount-value">{formatCurrency(c.value)}</span>
-                            <span className="amount-percent">{percent}%</span>
-                          </div>
+            {/* Category List - Shows all items, scrollable if more than 5 */}
+            <div className="category-breakdown-list-wrapper">
+              <div className="category-breakdown-list">
+                {chartData.map((c, i) => {
+                  const percent = Math.round((c.value / total) * 100)
+                  return (
+                    <div key={c.name} className="category-breakdown-item">
+                      <div className="category-breakdown-header">
+                        <div className="category-breakdown-name">
+                          <span className="category-color-swatch" style={{ background: colors[i % colors.length] }}></span>
+                          <span>{c.name}</span>
                         </div>
-                        <div className="category-breakdown-bar">
-                          <div 
-                            className="category-breakdown-bar-fill" 
-                            style={{ 
-                              width: `${percent}%`,
-                              background: colors[i % colors.length]
-                            }}
-                          ></div>
+                        <div className="category-breakdown-amount">
+                          <span className="amount-value">{formatCurrency(c.value)}</span>
+                          <span className="amount-percent">{percent}%</span>
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
+                      <div className="category-breakdown-bar">
+                        <div 
+                          className="category-breakdown-bar-fill" 
+                          style={{ 
+                            width: `${percent}%`,
+                            background: colors[i % colors.length]
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -318,12 +316,10 @@ const Analytics = ({ chartData = [], dailyExpenses = [], monthlyStats = {}, colo
       {/* Daily Expenses Chart using Chart.js */}
       {chartDataForBar.labels.length > 0 && (
         <div className="analytics-section">
-          <div className="analytics-section-card">
-            <h4>Daily Expenses Trend</h4>
-            <div className="chartjs-container">
-              <div className="chartjs-wrapper">
-                <Bar data={chartDataForBar} options={chartOptions} />
-              </div>
+          <h4>Daily Expenses Trend</h4>
+          <div className="chartjs-container">
+            <div className="chartjs-wrapper">
+              <Bar data={chartDataForBar} options={chartOptions} />
             </div>
           </div>
         </div>

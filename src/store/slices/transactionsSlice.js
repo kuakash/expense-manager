@@ -2,8 +2,6 @@ import { createSlice } from '@reduxjs/toolkit'
 import { 
   saveTransactionToFirestore, 
   deleteTransactionFromFirestore,
-  saveAllTransactionsToFirestore,
-  syncLocalStorageToFirestore,
   getTransactionsFromFirestore
 } from '../../services/firestoreService'
 
@@ -22,45 +20,88 @@ const transactionsSlice = createSlice({
   reducers: {
     setTransactions: (state, action) => {
       state.transactions = action.payload
-      // Save to localStorage as backup
-      localStorage.setItem('transactions', JSON.stringify(action.payload))
     },
     addTransaction: (state, action) => {
       const newTransaction = {
         id: Date.now(),
         type: action.payload.type || 'expense',
-        ...action.payload
+        ...action.payload,
+        createdBy: action.payload.createdBy || action.payload.username || action.payload.userEmail || 'Unknown',
+        createdAt: new Date().toISOString()
       }
       state.transactions.push(newTransaction)
-      // Save to localStorage
-      localStorage.setItem('transactions', JSON.stringify(state.transactions))
-      // Sync to Firestore (async, don't wait)
-      saveTransactionToFirestore(newTransaction).catch(err => {
-        console.warn('Failed to sync transaction to Firestore:', err)
-      })
-    },
-    editTransaction: (state, action) => {
-      const { id, updatedData } = action.payload
-      const index = state.transactions.findIndex(t => t.id === id)
-      if (index !== -1) {
-        state.transactions[index] = { ...state.transactions[index], ...updatedData }
-        // Save to localStorage
-        localStorage.setItem('transactions', JSON.stringify(state.transactions))
-        // Sync to Firestore (async, don't wait)
-        saveTransactionToFirestore(state.transactions[index]).catch(err => {
+      // Sync to Firestore (async, don't wait) - userId will be passed from component
+      if (action.payload.userId) {
+        saveTransactionToFirestore(newTransaction, action.payload.userId).catch(err => {
           console.warn('Failed to sync transaction to Firestore:', err)
         })
       }
     },
+    editTransaction: (state, action) => {
+      const { id, updatedData, userId, username } = action.payload
+      const index = state.transactions.findIndex(t => t.id === id)
+      if (index !== -1) {
+        // Preserve createdBy and createdAt, add edit tracking
+        const existingTransaction = state.transactions[index]
+        const now = new Date().toISOString()
+        
+        // Track changes by comparing old vs new values
+        const changes = []
+        const fieldsToTrack = ['amount', 'description', 'category', 'date', 'type']
+        
+        fieldsToTrack.forEach(field => {
+          const oldValue = existingTransaction[field]
+          const newValue = updatedData[field]
+          
+          // Only track if value actually changed
+          if (newValue !== undefined && String(oldValue) !== String(newValue)) {
+            changes.push({
+              field: field,
+              oldValue: oldValue,
+              newValue: newValue
+            })
+          }
+        })
+        
+        // Get existing edit history or create new array
+        const editHistory = existingTransaction.editHistory || []
+        
+        // Add new changes to history if any
+        if (changes.length > 0) {
+          editHistory.push({
+            changes: changes,
+            editedBy: username || 'Unknown',
+            editedAt: now
+          })
+        }
+        
+        state.transactions[index] = { 
+          ...existingTransaction,
+          ...updatedData,
+          createdBy: existingTransaction.createdBy || 'Unknown',
+          createdAt: existingTransaction.createdAt || now,
+          updatedAt: now,
+          editedBy: username || 'Unknown',
+          editedAt: now,
+          editHistory: editHistory // Store full edit history
+        }
+        // Sync to Firestore (async, don't wait)
+        if (userId) {
+          saveTransactionToFirestore(state.transactions[index], userId).catch(err => {
+            console.warn('Failed to sync transaction to Firestore:', err)
+          })
+        }
+      }
+    },
     deleteTransaction: (state, action) => {
-      const transactionId = action.payload
+      const { transactionId, userId } = action.payload
       state.transactions = state.transactions.filter(t => t.id !== transactionId)
-      // Save to localStorage
-      localStorage.setItem('transactions', JSON.stringify(state.transactions))
       // Sync to Firestore (async, don't wait)
-      deleteTransactionFromFirestore(transactionId).catch(err => {
-        console.warn('Failed to delete transaction from Firestore:', err)
-      })
+      if (userId) {
+        deleteTransactionFromFirestore(transactionId, userId).catch(err => {
+          console.warn('Failed to delete transaction from Firestore:', err)
+        })
+      }
     },
     setSelectedMonth: (state, action) => {
       state.selectedMonth = action.payload
@@ -85,63 +126,32 @@ export const {
 } = transactionsSlice.actions
 
 // Helper function to initialize and sync with Firestore
-export const initializeFirestoreSync = async (dispatch) => {
+export const initializeFirestoreSync = async (dispatch, userId) => {
+  if (!userId) {
+    // No user authenticated, skip Firestore sync
+    dispatch(setTransactions([]))
+    return
+  }
+
   try {
     dispatch(setSyncing(true))
     dispatch(setSyncError(null))
 
-    // Migrate legacy 'expenses' key to 'transactions' if present (one-time)
-    try {
-      const savedExpenses = localStorage.getItem('expenses')
-      if (savedExpenses) {
-        const parsed = JSON.parse(savedExpenses)
-        const migrated = parsed.map(exp => ({
-          ...exp,
-          type: exp.type || 'expense'
-        }))
-        if (migrated.length > 0) {
-          localStorage.setItem('transactions', JSON.stringify(migrated))
-          localStorage.removeItem('expenses')
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to migrate legacy expenses key:', err)
-    }
-
-    // Try to sync localStorage to Firestore (one-time migration)
-    await syncLocalStorageToFirestore()
-
     // Load from Firestore
-    const firestoreTransactions = await getTransactionsFromFirestore()
+    const firestoreTransactions = await getTransactionsFromFirestore(userId)
 
     if (firestoreTransactions && firestoreTransactions.length > 0) {
       // Use Firestore data
       dispatch(setTransactions(firestoreTransactions))
     } else {
-      // Fallback to localStorage
-      const localData = localStorage.getItem('transactions')
-      if (localData) {
-        const parsed = JSON.parse(localData)
-        if (parsed.length > 0) {
-          dispatch(setTransactions(parsed))
-          // Sync to Firestore
-          await saveAllTransactionsToFirestore(parsed)
-        }
-      }
+      // No data in Firestore, start with empty array
+      dispatch(setTransactions([]))
     }
   } catch (error) {
     console.error('Error initializing Firestore sync:', error)
-    dispatch(setSyncError('Failed to sync with cloud storage. Using local data.'))
-    // Fallback to localStorage
-    const localData = localStorage.getItem('transactions')
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData)
-        dispatch(setTransactions(parsed))
-      } catch (e) {
-        console.error('Error loading from localStorage:', e)
-      }
-    }
+    dispatch(setSyncError('Failed to sync with cloud storage.'))
+    // Start with empty array if Firestore fails
+    dispatch(setTransactions([]))
   } finally {
     dispatch(setSyncing(false))
   }

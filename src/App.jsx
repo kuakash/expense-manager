@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setSelectedMonth, initializeFirestoreSync } from './store/slices/transactionsSlice'
+import { setSelectedMonth, initializeFirestoreSync, setTransactions } from './store/slices/transactionsSlice'
+import { onAuthStateChange, logOut, getCurrentUser } from './services/authService'
+import { getUserProfile } from './services/userProfileService'
+import { getTransactionsFromFirestore } from './services/firestoreService'
 import Dashboard from './components/Dashboard/Dashboard'
 import TransactionsLedger from './components/TransactionsLedger/TransactionsLedger'
 import ExpenseForm from './components/ExpenseForm/ExpenseForm'
+import Auth from './components/Auth/Auth'
+import UsernameSetup from './components/UsernameSetup/UsernameSetup'
+import UsernameSettings from './components/UsernameSettings/UsernameSettings'
 import './App.css'
 
 function App() {
@@ -12,14 +18,173 @@ function App() {
   const isSyncing = useSelector((state) => state.transactions.isSyncing)
   const syncError = useSelector((state) => state.transactions.syncError)
   const [currentView, setCurrentView] = useState('dashboard') // 'dashboard' or 'transactions'
+  const [user, setUser] = useState(null)
+  const [username, setUsername] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [usernameLoading, setUsernameLoading] = useState(true)
 
-  // Initialize Firestore sync on app load
+  // Monitor authentication state
   useEffect(() => {
-    initializeFirestoreSync(dispatch)
+    let isMounted = true
+    
+    // Set a fallback timeout to prevent infinite loading
+    const fallbackTimeout = setTimeout(() => {
+      if (isMounted && (authLoading || usernameLoading)) {
+        console.warn('Auth loading timeout - forcing state update')
+        setAuthLoading(false)
+        setUsernameLoading(false)
+      }
+    }, 5000) // 5 second fallback
+    
+    const unsubscribe = onAuthStateChange(async (user) => {
+      clearTimeout(fallbackTimeout)
+      
+      if (!isMounted) return
+      
+      console.log('Auth state changed:', user ? 'User logged in' : 'User logged out')
+      setUser(user)
+      setAuthLoading(false)
+      
+      if (user) {
+        // Load user profile (username) with timeout
+        try {
+          console.log('App: Loading user profile for:', user.uid)
+          // Add timeout to prevent infinite loading
+          const profilePromise = getUserProfile(user.uid)
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout loading user profile')), 5000)
+          )
+          
+          const profile = await Promise.race([profilePromise, timeoutPromise])
+          
+          if (!isMounted) return
+          
+          console.log('App: Profile loaded:', profile)
+          
+          if (profile?.username) {
+            console.log('App: Username found:', profile.username)
+            setUsername(profile.username)
+          } else {
+            console.log('App: No username found in profile')
+            setUsername(null) // No username set yet
+          }
+        } catch (error) {
+          console.error('App: Error loading user profile:', error)
+          if (isMounted) {
+            setUsername(null)
+          }
+        } finally {
+          if (isMounted) {
+            console.log('App: Setting usernameLoading to false')
+            setUsernameLoading(false)
+          }
+        }
+        
+        // Initialize Firestore sync when user is authenticated
+        initializeFirestoreSync(dispatch, user.uid)
+      } else {
+        // Clear transactions and username when user logs out
+        dispatch({ type: 'transactions/setTransactions', payload: [] })
+        setUsername(null)
+        setUsernameLoading(false) // Don't keep loading if no user
+      }
+    })
+
+    return () => {
+      isMounted = false
+      clearTimeout(fallbackTimeout)
+      unsubscribe()
+    }
   }, [dispatch])
+
+  const handleAuthSuccess = async () => {
+    // Auth state change will be handled by onAuthStateChange
+    const currentUser = getCurrentUser()
+    if (currentUser) {
+      setUser(currentUser)
+      // Load username
+      try {
+        const profile = await getUserProfile(currentUser.uid)
+        if (profile?.username) {
+          setUsername(profile.username)
+        } else {
+          setUsername(null)
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error)
+        setUsername(null)
+      } finally {
+        setUsernameLoading(false)
+      }
+      initializeFirestoreSync(dispatch, currentUser.uid)
+    }
+  }
+
+  const handleUsernameSet = (newUsername) => {
+    setUsername(newUsername)
+    setUsernameLoading(false)
+  }
+
+  const handleUsernameChanged = async (newUsername) => {
+    setUsername(newUsername)
+    // Reload transactions to reflect updated usernames
+    if (user) {
+      try {
+        const transactions = await getTransactionsFromFirestore(user.uid)
+        if (transactions) {
+          dispatch(setTransactions(transactions))
+        }
+      } catch (error) {
+        console.error('Error reloading transactions after username change:', error)
+      }
+    }
+  }
+
+  const handleLogout = async () => {
+    await logOut()
+    // Auth state change will clear user and transactions
+  }
 
   const handleMonthChange = (month) => {
     dispatch(setSelectedMonth(month))
+  }
+
+  // Show loading state while checking auth
+  if (authLoading || usernameLoading) {
+    return (
+      <div className="app">
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          color: '#cbd5e1',
+          gap: '12px'
+        }}>
+          <div>Loading...</div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            If this takes too long, check your browser console for errors
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show auth screen if not logged in
+  if (!user) {
+    return <Auth onAuthSuccess={handleAuthSuccess} />
+  }
+
+  // Show username setup if user doesn't have a username
+  if (!username) {
+    return (
+      <UsernameSetup 
+        userId={user.uid} 
+        userEmail={user.email}
+        onComplete={handleUsernameSet}
+      />
+    )
   }
 
   return (
@@ -29,6 +194,44 @@ function App() {
           <div className="app-header-content">
             <h1>💰 Expense Tracker</h1>
             <p className="subtitle">Track your income and expenses</p>
+            <div style={{ 
+              marginTop: '8px', 
+              fontSize: '0.75rem', 
+              color: '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <span>Signed in as: <strong>{username}</strong> ({user.email})</span>
+              <UsernameSettings 
+                userId={user.uid}
+                userEmail={user.email}
+                currentUsername={username}
+                onUsernameChanged={handleUsernameChanged}
+              />
+              <button
+                onClick={handleLogout}
+                style={{
+                  padding: '4px 12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '6px',
+                  color: '#fca5a5',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = 'rgba(239, 68, 68, 0.2)'
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = 'rgba(239, 68, 68, 0.1)'
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
           {isSyncing && (
             <div className="sync-indicator">
@@ -59,7 +262,7 @@ function App() {
         {currentView === 'dashboard' && (
           <>
             <Dashboard />
-            <ExpenseForm />
+            <ExpenseForm userId={user.uid} username={username} />
           </>
         )}
 
@@ -78,8 +281,8 @@ function App() {
                 />
               </div>
             </div>
-            <ExpenseForm />
-            <TransactionsLedger />
+            <ExpenseForm userId={user.uid} username={username} />
+            <TransactionsLedger userId={user.uid} username={username} />
           </>
         )}
       </main>

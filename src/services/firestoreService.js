@@ -13,19 +13,28 @@ import { db } from '../config/firebase'
 
 const COLLECTION_NAME = 'transactions'
 
+// Get user-specific collection path
+const getUserCollectionPath = (userId) => {
+  if (!userId) return null
+  return `users/${userId}/${COLLECTION_NAME}`
+}
+
 // Check if Firestore is available
 const isFirestoreAvailable = () => {
   return db !== null
 }
 
 // Get all transactions from Firestore
-export const getTransactionsFromFirestore = async () => {
-  if (!isFirestoreAvailable()) {
+export const getTransactionsFromFirestore = async (userId) => {
+  if (!isFirestoreAvailable() || !userId) {
     return null
   }
 
   try {
-    const transactionsRef = collection(db, COLLECTION_NAME)
+    const userCollectionPath = getUserCollectionPath(userId)
+    if (!userCollectionPath) return null
+
+    const transactionsRef = collection(db, userCollectionPath)
     const q = query(transactionsRef, orderBy('date', 'desc'))
     const querySnapshot = await getDocs(q)
     
@@ -45,17 +54,32 @@ export const getTransactionsFromFirestore = async () => {
 }
 
 // Save a single transaction to Firestore
-export const saveTransactionToFirestore = async (transaction) => {
-  if (!isFirestoreAvailable()) {
+export const saveTransactionToFirestore = async (transaction, userId) => {
+  if (!isFirestoreAvailable() || !userId) {
     return false
   }
 
   try {
-    const transactionRef = doc(db, COLLECTION_NAME, String(transaction.id))
+    const userCollectionPath = getUserCollectionPath(userId)
+    if (!userCollectionPath) return false
+
+    const transactionRef = doc(db, userCollectionPath, String(transaction.id))
+    
+    // Get existing transaction to preserve createdAt if it exists
+    const existingDoc = await getDoc(transactionRef)
+    const existingData = existingDoc.exists() ? existingDoc.data() : {}
+    
     await setDoc(transactionRef, {
       ...transaction,
       id: String(transaction.id), // Ensure ID is stored as string
-      updatedAt: new Date().toISOString()
+      createdAt: transaction.createdAt || existingData.createdAt || new Date().toISOString(),
+      createdBy: transaction.createdBy || existingData.createdBy || 'Unknown',
+      updatedAt: new Date().toISOString(),
+      // Preserve edit tracking if it exists, or use new values
+      editedBy: transaction.editedBy || existingData.editedBy || null,
+      editedAt: transaction.editedAt || existingData.editedAt || null,
+      // Preserve edit history
+      editHistory: transaction.editHistory || existingData.editHistory || []
     }, { merge: true })
     return true
   } catch (error) {
@@ -64,33 +88,18 @@ export const saveTransactionToFirestore = async (transaction) => {
   }
 }
 
-// Save all transactions to Firestore
-export const saveAllTransactionsToFirestore = async (transactions) => {
-  if (!isFirestoreAvailable()) {
-    return false
-  }
-
-  try {
-    // Save all transactions in batch
-    const promises = transactions.map(transaction => 
-      saveTransactionToFirestore(transaction)
-    )
-    await Promise.all(promises)
-    return true
-  } catch (error) {
-    console.error('Error saving all transactions to Firestore:', error)
-    return false
-  }
-}
 
 // Delete a transaction from Firestore
-export const deleteTransactionFromFirestore = async (transactionId) => {
-  if (!isFirestoreAvailable()) {
+export const deleteTransactionFromFirestore = async (transactionId, userId) => {
+  if (!isFirestoreAvailable() || !userId) {
     return false
   }
 
   try {
-    const transactionRef = doc(db, COLLECTION_NAME, String(transactionId))
+    const userCollectionPath = getUserCollectionPath(userId)
+    if (!userCollectionPath) return false
+
+    const transactionRef = doc(db, userCollectionPath, String(transactionId))
     await deleteDoc(transactionRef)
     return true
   } catch (error) {
@@ -100,13 +109,16 @@ export const deleteTransactionFromFirestore = async (transactionId) => {
 }
 
 // Subscribe to real-time updates from Firestore
-export const subscribeToTransactions = (callback) => {
-  if (!isFirestoreAvailable()) {
+export const subscribeToTransactions = (callback, userId) => {
+  if (!isFirestoreAvailable() || !userId) {
     return () => {} // Return empty unsubscribe function
   }
 
   try {
-    const transactionsRef = collection(db, COLLECTION_NAME)
+    const userCollectionPath = getUserCollectionPath(userId)
+    if (!userCollectionPath) return () => {}
+
+    const transactionsRef = collection(db, userCollectionPath)
     const q = query(transactionsRef, orderBy('date', 'desc'))
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -129,36 +141,4 @@ export const subscribeToTransactions = (callback) => {
   }
 }
 
-// Sync localStorage data to Firestore (one-time migration)
-export const syncLocalStorageToFirestore = async () => {
-  if (!isFirestoreAvailable()) {
-    return false
-  }
-
-  try {
-    const localData = localStorage.getItem('transactions')
-    if (!localData) {
-      return false
-    }
-
-    const transactions = JSON.parse(localData)
-    if (transactions.length === 0) {
-      return false
-    }
-
-    // Check if Firestore already has data
-    const firestoreData = await getTransactionsFromFirestore()
-    if (firestoreData && firestoreData.length > 0) {
-      // Firestore has data, don't overwrite
-      return false
-    }
-
-    // Migrate local data to Firestore
-    await saveAllTransactionsToFirestore(transactions)
-    return true
-  } catch (error) {
-    console.error('Error syncing localStorage to Firestore:', error)
-    return false
-  }
-}
 

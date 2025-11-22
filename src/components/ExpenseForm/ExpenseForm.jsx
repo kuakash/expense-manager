@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addTransaction } from '../../store/slices/transactionsSlice'
 import './ExpenseForm.css'
 
-function ExpenseForm() {
+function ExpenseForm({ userId, username }) {
   const dispatch = useDispatch()
   const selectedMonth = useSelector((state) => state.transactions.selectedMonth)
   
@@ -58,7 +58,9 @@ function ExpenseForm() {
     dispatch(addTransaction({
       ...formData,
       amount: parseFloat(formData.amount).toFixed(2),
-      date: transactionDate
+      date: transactionDate,
+      userId: userId,
+      username: username || 'Unknown'
     }))
 
     // Reset form
